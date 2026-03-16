@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>BOFB – My Runner Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+/* ══════════════════════════════════════════════════
+   BOFB EXACT BRAND PALETTE — bestofthebestmarathon.co.za
+   ─────────────────────────────────────────────────
+   Background:   #280B50  (deepest purple)
+   Card bg:      #3D1272  (medium deep purple)
+   Nav bar:      gradient #6B28A8 → #4A1880
+   Primary:      #7B35C1  (mid purple)
+   Border:       #5A2490  (purple border)
+   Magenta CTA:  #B8245A  (buttons / highlights)
+   Magenta hover:#D42D6A
+   White text:   #FFFFFF
+   Muted text:   #A89FC0
+   Green ok:     #34D399
+══════════════════════════════════════════════════ */
+:root{
+  --bg:          #1E0842;
+  --bg-card:     #310F68;
+  --bg-card2:    #280D58;
+  --nav:         #5A1E96;
+  --nav-dark:    #3D1070;
+  --purple:      #7B35C1;
+  --purple-lt:   #9B5DD4;
+  --border:      #5A2490;
+  --border-lt:   #7040A8;
+  --magenta:     #B8245A;
+  --magenta-h:   #D42D6A;
+  --mag-glow:    rgba(184,36,90,0.28);
+  --pur-glow:    rgba(155,93,212,0.22);
+  --white:       #ffffff;
+  --text:        #EDE8F5;
+  --muted:       #A89FC0;
+  --muted2:      #7060A0;
+  --green:       #34D399;
+  --r:  10px;
+  --rl: 16px;
+  --sh: 0 6px 28px rgba(0,0,0,0.55);
+  --fh: 'Bebas Neue', sans-serif;
+  --fc: 'Barlow Condensed', sans-serif;
+  --fb: 'Barlow', sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--fb);font-size:15px;line-height:1.55;overflow-x:hidden}
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:var(--bg-card2)}
+::-webkit-scrollbar-thumb{background:var(--purple);border-radius:3px}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes ticker{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+@keyframes pulseAv{0%,100%{box-shadow:0 0 0 0 var(--mag-glow),0 0 18px var(--mag-glow)}50%{box-shadow:0 0 0 10px transparent,0 0 28px var(--mag-glow)}}
+
+/* ── TICKER ─── */
+.ticker{background:linear-gradient(90deg,var(--magenta) 0%,#8B1A50 50%,var(--magenta) 100%);height:30px;overflow:hidden;display:flex;align-items:center}
+.ticker-track{display:flex;white-space:nowrap;animation:ticker 28s linear infinite}
+.ticker-track span{font-family:var(--fh);font-size:.77rem;letter-spacing:.2em;color:var(--white);padding:0 2rem}
+.ticker-track span::before{content:'◆';margin-right:.8rem;font-size:.36rem;vertical-align:middle;opacity:.55}
+
+/* ── TOPBAR ─── */
+.topbar{position:sticky;top:0;z-index:100;height:64px;background:linear-gradient(135deg,var(--nav) 0%,var(--nav-dark) 100%);border-bottom:1px solid var(--border);box-shadow:0 2px 20px rgba(0,0,0,.45);display:flex;align-items:center}
+.topbar-inner{max-width:1160px;width:100%;margin:0 auto;padding:0 1.5rem;display:flex;align-items:center;gap:1.5rem}
+.brand{font-family:var(--fh);font-size:1.8rem;letter-spacing:.06em;color:var(--white);flex-shrink:0;line-height:1}
+.brand em{color:var(--magenta);font-style:normal}
+.nav-links{display:flex;gap:.1rem;list-style:none;margin-left:auto}
+.nav-links a{font-family:var(--fc);font-size:.86rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.6);padding:.4rem .85rem;border-radius:6px;text-decoration:none;transition:all .2s}
+.nav-links a:hover,.nav-links a.active{color:var(--white);background:rgba(255,255,255,.14)}
+.runner-chip{display:flex;align-items:center;gap:.6rem;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:30px;padding:.28rem .28rem .28rem .9rem;flex-shrink:0}
+.chip-name{font-family:var(--fc);font-size:.82rem;font-weight:700;color:var(--white);white-space:nowrap}
+.chip-av{width:30px;height:30px;border-radius:50%;background:var(--magenta);display:flex;align-items:center;justify-content:center;font-family:var(--fh);font-size:.85rem;color:var(--white);flex-shrink:0}
+.ham{display:none;flex-direction:column;gap:5px;cursor:pointer;border:none;background:none;padding:4px;margin-left:auto}
+.ham span{width:22px;height:2px;background:var(--white);border-radius:2px;transition:.3s;display:block}
+
+/* ── PAGE ─── */
+.page{max-width:1160px;margin:0 auto;padding:2rem 1.5rem 5rem}
+
+/* ── HERO BANNER ─── */
+.hero-banner{position:relative;overflow:hidden;background:linear-gradient(120deg,var(--bg-card) 0%,var(--bg-card2) 100%);border:1px solid var(--border);border-left:4px solid var(--magenta);border-radius:var(--rl);padding:2.2rem 2.5rem;margin-bottom:1.5rem;display:flex;align-items:center;justify-content:space-between;gap:2rem;animation:fadeUp .45s ease both;box-shadow:var(--sh)}
+.hero-banner::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 85% 50%,rgba(184,36,90,.12) 0%,transparent 55%);pointer-events:none}
+.hero-banner::after{content:'BOTB';position:absolute;right:-1rem;top:50%;transform:translateY(-50%);font-family:var(--fh);font-size:9rem;color:rgba(255,255,255,.03);letter-spacing:.05em;pointer-events:none;white-space:nowrap}
+.hb-left h1{font-family:var(--fh);font-size:clamp(1.8rem,4vw,2.7rem);color:var(--white);letter-spacing:.04em;line-height:1;margin-bottom:.4rem}
+.hb-left h1 em{color:var(--magenta);font-style:normal}
+.hb-left p{font-size:.88rem;color:var(--muted)}
+.hb-right{display:flex;gap:.9rem;flex-shrink:0;flex-wrap:wrap}
+.hb-pill{text-align:center;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);border-radius:var(--r);padding:.9rem 1.3rem;min-width:105px;transition:all .2s}
+.hb-pill:hover{background:rgba(184,36,90,.18);border-color:var(--magenta)}
+.hb-pill-val{font-family:var(--fh);font-size:1.55rem;color:var(--white);letter-spacing:.03em;line-height:1}
+.hb-pill-label{font-family:var(--fc);font-size:.62rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-top:.25rem}
+
+/* ── STATS ROW ─── */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.5rem}
+.stat-card{background:var(--bg-card);border:1px solid var(--border);border-bottom:3px solid transparent;border-radius:var(--r);padding:1.1rem 1.2rem;display:flex;align-items:center;gap:.9rem;animation:fadeUp .45s ease both;transition:all .2s;cursor:default;box-shadow:0 2px 12px rgba(0,0,0,.3)}
+.stat-card:hover{border-bottom-color:var(--magenta);background:var(--purple);transform:translateY(-3px);box-shadow:0 6px 20px rgba(0,0,0,.4)}
+.sc-icon{font-size:1.4rem;width:42px;height:42px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.1);border-radius:var(--r);flex-shrink:0}
+.sc-val{font-family:var(--fh);font-size:1.7rem;color:var(--white);letter-spacing:.03em;line-height:1}
+.sc-label{font-family:var(--fc);font-size:.68rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+
+/* ── MAIN GRID ─── */
+.main-grid{display:grid;grid-template-columns:305px 1fr;gap:1.5rem;margin-bottom:1.5rem}
+
+/* ── PROFILE CARD ─── */
+.profile-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--rl);padding:1.8rem;animation:fadeUp .45s ease .1s both;display:flex;flex-direction:column;gap:1.2rem;box-shadow:var(--sh)}
+.pc-top{display:flex;flex-direction:column;align-items:center;text-align:center;gap:.65rem}
+.pc-avatar{width:84px;height:84px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--fh);font-size:2.1rem;color:var(--white);border:3px solid var(--magenta);animation:pulseAv 3.5s infinite;flex-shrink:0}
+.pc-goal-badge{font-family:var(--fh);font-size:.92rem;letter-spacing:.1em;color:var(--white);background:var(--magenta);padding:.2rem .85rem;border-radius:4px}
+.pc-name{font-family:var(--fh);font-size:1.6rem;color:var(--white);letter-spacing:.04em;line-height:1}
+.pc-divider{height:1px;background:var(--border)}
+.pc-info{display:flex;flex-direction:column;gap:.52rem}
+.pc-row{display:flex;justify-content:space-between;align-items:center}
+.pc-key{font-family:var(--fc);font-size:.68rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.pc-val{font-family:var(--fc);font-weight:700;color:var(--white);font-size:.88rem}
+.pb-pair{display:grid;grid-template-columns:1fr 1fr;gap:.7rem}
+.pb-box{background:rgba(0,0,0,.25);border:1px solid var(--border);border-radius:var(--r);padding:.8rem;text-align:center}
+.pb-box.goal-box{border-color:var(--magenta);background:rgba(184,36,90,.1)}
+.pb-box-label{font-family:var(--fc);font-size:.6rem;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);margin-bottom:.22rem}
+.pb-box-val{font-family:var(--fh);font-size:1.35rem;color:var(--white);letter-spacing:.03em;line-height:1}
+.pb-box.goal-box .pb-box-val{color:var(--magenta)}
+.prog-header{display:flex;justify-content:space-between;font-family:var(--fc);font-size:.66rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:.45rem}
+.prog-track{height:6px;background:rgba(0,0,0,.35);border-radius:3px;overflow:visible;position:relative;margin-bottom:.35rem}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--magenta),var(--magenta-h));border-radius:3px;width:0;transition:width 1.3s cubic-bezier(.4,0,.2,1);position:relative}
+.prog-fill::after{content:'';position:absolute;right:-5px;top:50%;transform:translateY(-50%);width:14px;height:14px;background:var(--magenta);border-radius:50%;border:2px solid var(--bg-card);box-shadow:0 0 8px var(--mag-glow)}
+.prog-ends{display:flex;justify-content:space-between;font-size:.66rem;color:var(--muted)}
+.motiv-box{background:rgba(0,0,0,.22);border:1px solid var(--border);border-left:3px solid var(--magenta);border-radius:var(--r);padding:.9rem 1rem .9rem 1.1rem;position:relative;overflow:hidden}
+.motiv-deco{font-family:Georgia,serif;font-size:4.5rem;color:var(--magenta);opacity:.15;position:absolute;top:-.7rem;left:.2rem;line-height:1;pointer-events:none}
+.motiv-box p{position:relative;font-size:.82rem;font-style:italic;color:var(--muted);line-height:1.65}
+
+/* ── RIGHT COL ─── */
+.right-col{display:flex;flex-direction:column;gap:1.2rem}
+.chart-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--rl);padding:1.5rem;animation:fadeUp .45s ease .15s both;box-shadow:var(--sh)}
+.cc-header{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:1.1rem}
+.cc-title{font-family:var(--fh);font-size:1.3rem;color:var(--white);letter-spacing:.05em}
+.cc-sub{font-size:.74rem;color:var(--muted)}
+.chart-wrap{height:210px;position:relative}
+
+.race-card{background:linear-gradient(120deg,var(--bg-card2) 0%,rgba(184,36,90,.1) 100%);border:1px solid var(--border);border-left:4px solid var(--magenta);border-radius:var(--rl);padding:1.4rem 1.6rem;display:flex;align-items:center;justify-content:space-between;gap:1.5rem;animation:fadeUp .45s ease .2s both;flex-wrap:wrap;box-shadow:var(--sh)}
+.rc-label{font-family:var(--fc);font-size:.65rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--magenta);margin-bottom:.3rem}
+.rc-title{font-family:var(--fh);font-size:1.45rem;color:var(--white);letter-spacing:.04em;line-height:1;margin-bottom:.3rem}
+.rc-meta{font-size:.82rem;color:var(--muted)}
+.countdown{display:flex;gap:.55rem;flex-shrink:0}
+.cd-block{text-align:center;background:rgba(0,0,0,.3);border:1px solid var(--border);border-bottom:2px solid var(--magenta);border-radius:var(--r);padding:.5rem .65rem;min-width:52px}
+.cd-num{font-family:var(--fh);font-size:1.5rem;color:var(--white);line-height:1}
+.cd-lbl{font-family:var(--fc);font-size:.56rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-top:.1rem}
+
+/* ── SECTION HEADING ─── */
+.sec-heading{margin-bottom:1rem}
+.sec-eyebrow{font-family:var(--fc);font-size:.66rem;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--magenta);margin-bottom:.15rem}
+.sec-title{font-family:var(--fh);font-size:1.9rem;color:var(--white);letter-spacing:.04em;line-height:1}
+
+/* ── HISTORY TABLE ─── */
+.history-section{animation:fadeUp .45s ease .25s both;margin-bottom:1.5rem}
+.table-wrap{border:1px solid var(--border);border-radius:var(--r);overflow:hidden;overflow-x:auto;box-shadow:var(--sh)}
+.hist-table{width:100%;border-collapse:collapse;font-size:.88rem}
+.hist-table thead th{font-family:var(--fc);font-size:.65rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.75);text-align:left;padding:.9rem 1.2rem;background:linear-gradient(135deg,var(--nav) 0%,var(--nav-dark) 100%);border-bottom:1px solid var(--border);white-space:nowrap}
+.hist-table tbody tr{border-bottom:1px solid rgba(255,255,255,.05);transition:background .15s;background:var(--bg-card2)}
+.hist-table tbody tr:nth-child(even){background:var(--bg-card)}
+.hist-table tbody tr:last-child{border:none}
+.hist-table tbody tr:hover{background:var(--purple)}
+.hist-table tbody tr.is-pb{background:rgba(184,36,90,.14);border-left:3px solid var(--magenta)}
+.hist-table td{padding:.82rem 1.2rem;color:var(--text);white-space:nowrap}
+.hist-table td.year-cell{font-family:var(--fh);font-size:1.1rem;color:var(--white)}
+.hist-table td.time-cell{font-family:var(--fc);font-size:.95rem;font-weight:700;letter-spacing:.04em}
+.hist-table td.time-cell.is-pb-time{color:var(--magenta)}
+.badge{display:inline-flex;align-items:center;gap:.25rem;font-family:var(--fc);font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:.2rem .65rem;border-radius:4px}
+.b-pb{color:var(--white);background:var(--magenta)}
+.b-finish{color:var(--green);background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.22)}
+.b-upcoming{color:var(--white);background:rgba(155,93,212,.25);border:1px solid var(--border-lt)}
+
+/* ── IMPROVE STRIP ─── */
+.improve-strip{display:flex;gap:.8rem;margin-top:1rem;flex-wrap:wrap}
+.imp-chip{display:flex;align-items:center;gap:.45rem;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r);padding:.55rem .95rem;font-size:.8rem;color:var(--muted)}
+.imp-chip strong{font-family:var(--fc);font-weight:700;color:var(--green);font-size:.88rem}
+
+/* ── RESPONSIVE ─── */
+@media(max-width:900px){.main-grid{grid-template-columns:1fr}.stats-row{grid-template-columns:1fr 1fr}.race-card{flex-direction:column;align-items:flex-start}}
+@media(max-width:620px){.nav-links{display:none}.nav-links.open{display:flex;flex-direction:column;position:fixed;top:64px;left:0;right:0;bottom:0;background:var(--bg);padding:2rem;gap:1rem;z-index:99;list-style:none;border-top:2px solid var(--border)}.nav-links.open a{font-size:1.4rem;color:var(--white)}.ham{display:flex}.runner-chip{display:none}.hero-banner{flex-direction:column;align-items:flex-start}.hb-right{width:100%}}
+@media(max-width:480px){.stats-row{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+
+<div class="ticker" aria-hidden="true">
+  <div class="ticker-track">
+    <span>BEST OF THE BEST MARATHON</span><span>THE MARATHON OF EXCELLENCE</span>
+    <span>KINGS PARK · DURBAN · KZN</span><span>42KM · 21KM · 10KM · 5KM</span>
+    <span>BEST OF THE BEST MARATHON</span><span>THE MARATHON OF EXCELLENCE</span>
+    <span>KINGS PARK · DURBAN · KZN</span><span>42KM · 21KM · 10KM · 5KM</span>
+  </div>
+</div>
+
+<nav class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">BOTB<em>.</em></div>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="#overview" class="active">Overview</a></li>
+      <li><a href="#history">Race History</a></li>
+    </ul>
+    <div class="runner-chip">
+      <span class="chip-name" id="chipName">Siphelo Dlamini</span>
+      <div class="chip-av" id="chipAv">SD</div>
+    </div>
+    <button class="ham" id="ham" aria-label="Menu"><span></span><span></span><span></span></button>
+  </div>
+</nav>
+
+<main class="page">
+
+  <div class="hero-banner" id="overview">
+    <div class="hb-left">
+      <h1>Welcome back, <em id="heroName">Siphelo</em>!</h1>
+      <p id="heroSub">Durban Striders · #45872 · Senior Men</p>
+    </div>
+    <div class="hb-right">
+      <div class="hb-pill"><div class="hb-pill-val" id="heroPB">04:35:22</div><div class="hb-pill-label">Personal Best</div></div>
+      <div class="hb-pill"><div class="hb-pill-val" id="heroGoal">Sub 3:00</div><div class="hb-pill-label">2026 Goal</div></div>
+    </div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card" style="--delay:.05s"><div class="sc-icon">🏅</div><div><div class="sc-val" id="sPB">04:35:22</div><div class="sc-label">Personal Best</div></div></div>
+    <div class="stat-card" style="--delay:.1s"><div class="sc-icon">📍</div><div><div class="sc-val" id="sBestPos">139</div><div class="sc-label">Best Position</div></div></div>
+    <div class="stat-card" style="--delay:.15s"><div class="sc-icon">📉</div><div><div class="sc-val" id="sImprove">36m</div><div class="sc-label">Time Improved</div></div></div>
+    <div class="stat-card" style="--delay:.2s"><div class="sc-icon">🎽</div><div><div class="sc-val" id="sRaces">6</div><div class="sc-label">Races Completed</div></div></div>
+  </div>
+
+  <div class="main-grid">
+    <div class="profile-card">
+      <div class="pc-top">
+        <div class="pc-avatar" id="pcAvatar"></div>
+        <div class="pc-goal-badge" id="pcBadge">SUB 3:00</div>
+        <div class="pc-name" id="pcName">Siphelo Dlamini</div>
+      </div>
+      <div class="pc-divider"></div>
+      <div class="pc-info">
+        <div class="pc-row"><span class="pc-key">Runner #</span><span class="pc-val" id="pcNum">45872</span></div>
+        <div class="pc-row"><span class="pc-key">Club</span><span class="pc-val" id="pcClub">Durban Striders</span></div>
+        <div class="pc-row"><span class="pc-key">Category</span><span class="pc-val" id="pcCat">Senior Men</span></div>
+        <div class="pc-row"><span class="pc-key">Province</span><span class="pc-val">KwaZulu-Natal</span></div>
+      </div>
+      <div class="pc-divider"></div>
+      <div class="pb-pair">
+        <div class="pb-box"><div class="pb-box-label">My PB</div><div class="pb-box-val" id="pcPB">04:35:22</div></div>
+        <div class="pb-box goal-box"><div class="pb-box-label">2026 Goal</div><div class="pb-box-val" id="pcGoal">Sub 3:00</div></div>
+      </div>
+      <div>
+        <div class="prog-header"><span>Goal Progress</span><span id="progPct">0%</span></div>
+        <div class="prog-track"><div class="prog-fill" id="progFill"></div></div>
+        <div class="prog-ends"><span>6:00:00</span><span id="progGoalEnd">Sub 3:00</span></div>
+      </div>
+      <div class="motiv-box">
+        <div class="motiv-deco">"</div>
+        <p id="pcMotiv">I run to challenge myself and inspire the youth in my community. Every step is a statement that ordinary people can do extraordinary things.</p>
+      </div>
+    </div>
+
+    <div class="right-col">
+      <div class="chart-card">
+        <div class="cc-header">
+          <div><div class="cc-title">Performance Trend</div><div class="cc-sub">Finish time per year — lower is better · ⭐ marks PB</div></div>
+        </div>
+        <div class="chart-wrap"><canvas id="perfChart"></canvas></div>
+      </div>
+      <div class="race-card">
+        <div>
+          <div class="rc-label">Your Next Race</div>
+          <div class="rc-title">Best of the Best Marathon 2027</div>
+          <div class="rc-meta">📍 Kings Park Stadium, Durban &nbsp;·&nbsp; 42.2km Full Marathon</div>
+        </div>
+        <div class="countdown">
+          <div class="cd-block"><div class="cd-num" id="cdD">--</div><div class="cd-lbl">Days</div></div>
+          <div class="cd-block"><div class="cd-num" id="cdH">--</div><div class="cd-lbl">Hrs</div></div>
+          <div class="cd-block"><div class="cd-num" id="cdM">--</div><div class="cd-lbl">Min</div></div>
+          <div class="cd-block"><div class="cd-num" id="cdS">--</div><div class="cd-lbl">Sec</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="history-section" id="history">
+    <div class="sec-heading">
+      <div class="sec-eyebrow">Race Record</div>
+      <div class="sec-title">My Race History</div>
+    </div>
+    <div class="table-wrap">
+      <table class="hist-table">
+        <thead><tr><th>Year</th><th>Race</th><th>Distance</th><th>Finish Time</th><th>Position</th><th>Status</th></tr></thead>
+        <tbody id="histBody"></tbody>
+      </table>
+    </div>
+    <div class="improve-strip" id="improveStrip"></div>
+  </div>
+
+</main>
+
+<script>
+const runner = {
+  name:"Siphelo Dlamini", initials:"SD", number:"45872",
+  club:"Durban Striders", category:"Senior Men",
+  goal:"Sub 3:00", goalBadge:"SUB 3:00", goalMins:180,
+  motivation:"I run to challenge myself and inspire the youth in my community. Every step is a statement that ordinary people can do extraordinary things.",
+  history:[
+    {year:2020,race:"BOFB Marathon",dist:"42km",time:"05:12:10",pos:342,mins:312.17},
+    {year:2021,race:"BOFB Marathon",dist:"42km",time:"04:58:40",pos:280,mins:298.67},
+    {year:2022,race:"BOFB Marathon",dist:"42km",time:"04:45:21",pos:201,mins:285.35},
+    {year:2023,race:"BOFB Marathon",dist:"42km",time:"04:38:48",pos:150,mins:278.80},
+    {year:2024,race:"BOFB Marathon",dist:"42km",time:"04:41:05",pos:163,mins:281.08},
+    {year:2025,race:"BOFB Marathon",dist:"42km",time:"04:35:22",pos:139,mins:275.37},
+    {year:2026,race:"BOFB Marathon",dist:"42km",time:"—",pos:"—",mins:null,upcoming:true},
+  ]
+};
+
+function getBest(r){const f=r.history.filter(h=>!h.upcoming);return f.reduce((b,h)=>h.mins<b.mins?h:b,f[0]);}
+function calcProgress(pb,goal,start=360){return Math.min(100,Math.max(0,Math.round(((start-pb)/(start-goal))*100)));}
+function fmtDiff(m){const h=Math.floor(m/60),mn=Math.floor(m%60);return h>0?`${h}h ${mn}m`:`${mn}m`;}
+
+function populate(){
+  const pb=getBest(runner);
+  const fin=runner.history.filter(h=>!h.upcoming);
+  const first=fin[0];
+  const bestPos=Math.min(...fin.map(h=>typeof h.pos==='number'?h.pos:9999));
+  const improv=first.mins-pb.mins;
+
+  const av=document.getElementById('pcAvatar');
+  av.textContent=runner.initials;
+  av.style.background='linear-gradient(135deg,#7B35C1,#B8245A)';
+
+  document.getElementById('chipName').textContent=runner.name;
+  document.getElementById('heroName').textContent=runner.name.split(' ')[0];
+  document.getElementById('heroSub').textContent=`${runner.club} · #${runner.number} · ${runner.category}`;
+  document.getElementById('heroPB').textContent=pb.time;
+  document.getElementById('heroGoal').textContent=runner.goal;
+  document.getElementById('sPB').textContent=pb.time;
+  document.getElementById('sBestPos').textContent=bestPos;
+  document.getElementById('sImprove').textContent=fmtDiff(improv);
+  document.getElementById('sRaces').textContent=fin.length;
+  document.getElementById('pcBadge').textContent=runner.goalBadge;
+  document.getElementById('pcName').textContent=runner.name;
+  document.getElementById('pcNum').textContent=runner.number;
+  document.getElementById('pcClub').textContent=runner.club;
+  document.getElementById('pcCat').textContent=runner.category;
+  document.getElementById('pcPB').textContent=pb.time;
+  document.getElementById('pcGoal').textContent=runner.goal;
+  document.getElementById('progGoalEnd').textContent=runner.goal;
+  document.getElementById('pcMotiv').textContent=runner.motivation;
+
+  const pct=calcProgress(pb.mins,runner.goalMins);
+  setTimeout(()=>{document.getElementById('progFill').style.width=pct+'%';document.getElementById('progPct').textContent=pct+'%';},450);
+
+  document.getElementById('improveStrip').innerHTML=`
+    <div class="imp-chip">🏁 First race <strong>${first.time}</strong></div>
+    <div class="imp-chip">⚡ Personal best <strong>${pb.time}</strong></div>
+    <div class="imp-chip">📉 Total improvement <strong>${fmtDiff(improv)}</strong></div>
+    <div class="imp-chip">🏅 Best position <strong>#${bestPos}</strong></div>`;
+
+  buildTable(pb);
+  buildChart(pb,fin);
+  startCountdown();
+}
+
+function buildTable(pb){
+  const tbody=document.getElementById('histBody');tbody.innerHTML='';
+  runner.history.forEach((h,i)=>{
+    const tr=document.createElement('tr');
+    const isPB=!h.upcoming&&h.mins===pb.mins;
+    if(isPB)tr.classList.add('is-pb');
+    const badge=h.upcoming?`<span class="badge b-upcoming">📅 Upcoming</span>`
+      :isPB?`<span class="badge b-pb">⭐ PB</span>`
+      :`<span class="badge b-finish">✓ Finished</span>`;
+    tr.innerHTML=`<td class="year-cell">${h.year}</td><td>${h.race}</td><td>${h.dist}</td>
+      <td class="time-cell ${isPB?'is-pb-time':''}">${h.time}</td><td>${h.pos}</td><td>${badge}</td>`;
+    tr.style.cssText=`opacity:0;transform:translateY(6px);transition:opacity .3s ease ${i*.06}s,transform .3s ease ${i*.06}s`;
+    tbody.appendChild(tr);
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{tr.style.opacity='1';tr.style.transform='translateY(0)';}));
+  });
+}
+
+function buildChart(pb,fin){
+  const pbIdx=fin.findIndex(h=>h.mins===pb.mins);
+  const ptC=fin.map((_,i)=>i===pbIdx?'#B8245A':'#9B5DD4');
+  const ptS=fin.map((_,i)=>i===pbIdx?7:5);
+  new Chart(document.getElementById('perfChart').getContext('2d'),{
+    type:'line',
+    data:{labels:fin.map(h=>h.year),datasets:[{
+      data:fin.map(h=>parseFloat(h.mins.toFixed(1))),
+      borderColor:'#9B5DD4',backgroundColor:'rgba(107,43,168,0.2)',
+      borderWidth:2.5,pointBackgroundColor:ptC,pointBorderColor:'#310F68',
+      pointBorderWidth:2,pointRadius:ptS,pointHoverRadius:8,fill:true,tension:.4
+    }]},
+    options:{responsive:true,maintainAspectRatio:false,animation:{duration:1100,easing:'easeInOutQuart'},
+      plugins:{legend:{display:false},tooltip:{
+        backgroundColor:'#3D1272',borderColor:'#9B5DD4',borderWidth:1,
+        titleColor:'#EDE8F5',bodyColor:'#A89FC0',padding:11,
+        callbacks:{label:item=>{const v=item.raw;const h=Math.floor(v/60);const m=String(Math.floor(v%60)).padStart(2,'0');const s=String(Math.round((v%1)*60)).padStart(2,'0');const iB=item.dataIndex===fin.findIndex(h=>h.mins===getBest(runner).mins);return ` ${h}:${m}:${s}${iB?'  ⭐ PB':''}`;}}}},
+      scales:{
+        x:{grid:{color:'rgba(255,255,255,.06)'},ticks:{color:'#A89FC0',font:{family:"'Barlow Condensed'",size:11}}},
+        y:{grid:{color:'rgba(255,255,255,.06)'},reverse:true,ticks:{color:'#A89FC0',font:{family:"'Barlow Condensed'",size:11},callback:v=>{const h=Math.floor(v/60);const m=String(Math.floor(v%60)).padStart(2,'0');return `${h}:${m}`;}}}
+      }}
+  });
+}
+
+function startCountdown(){
+  const d=new Date('2027-02-28T06:00:00');
+  const t=()=>{const diff=d-new Date();if(diff<=0)return;
+    const dd=Math.floor(diff/86400000),h=Math.floor((diff%86400000)/3600000),m=Math.floor((diff%3600000)/60000),s=Math.floor((diff%60000)/1000);
+    document.getElementById('cdD').textContent=String(dd).padStart(2,'0');
+    document.getElementById('cdH').textContent=String(h).padStart(2,'0');
+    document.getElementById('cdM').textContent=String(m).padStart(2,'0');
+    document.getElementById('cdS').textContent=String(s).padStart(2,'0');};
+  t();setInterval(t,1000);
+}
+
+function initScrollSpy(){
+  const links=document.querySelectorAll('.nav-links a');
+  const obs=new IntersectionObserver(e=>{e.forEach(en=>{if(en.isIntersecting){links.forEach(l=>l.classList.remove('active'));const a=document.querySelector(`.nav-links a[href="#${en.target.id}"]`);if(a)a.classList.add('active');}});},{threshold:.3,rootMargin:'-60px 0px 0px 0px'});
+  ['overview','history'].forEach(id=>{const el=document.getElementById(id);if(el)obs.observe(el);});
+}
+
+(function(){
+  const btn=document.getElementById('ham'),nav=document.getElementById('navLinks');
+  btn.addEventListener('click',()=>{const o=nav.classList.toggle('open');const s=btn.querySelectorAll('span');s[0].style.transform=o?'rotate(45deg) translate(4px,4px)':'';s[1].style.opacity=o?'0':'1';s[2].style.transform=o?'rotate(-45deg) translate(4px,-4px)':'';});
+  nav.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>{nav.classList.remove('open');btn.querySelectorAll('span').forEach(s=>{s.style.transform='';s.style.opacity='';});}));
+})();
+
+populate();
+initScrollSpy();
+</script>
+</body>
+</html>
